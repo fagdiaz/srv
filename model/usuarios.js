@@ -22,9 +22,10 @@ exports.addUser = async (req,res) => {
     const usuariosRef = db.collection('usuarios');
     const user = req.body.user;
     try {
-        usuariosRef.doc("123").set(user); 
-        res.status()       
+        usuariosRef.doc().set(user); 
+        res.status(200).json({res: "ok", err:""});
     } catch (error) {
+        res.status(500).json({res:"fail", err: error})
         console.log("ocurrio un error", error)
     }
 
