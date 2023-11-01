@@ -3,8 +3,7 @@ const cors = require('cors');
 
 //var app = express();
 const { usuarios } = require('./model/usuarios')
-
-
+const { productos } = require('./model/productos')
 
 // Initialize Firebase
 const app = express()
@@ -20,6 +19,8 @@ app.post('/signup', () => {
 })
 
 app.get('/usuarios', usuarios)
+
+app.get('/productos', productos)
 
 
 
