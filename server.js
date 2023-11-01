@@ -2,7 +2,7 @@ const express = require('express');
 const cors = require('cors');
 
 //var app = express();
-const { usuarios } = require('./model/usuarios')
+const { usuarios, addUser } = require('./model/usuarios')
 
 
 
@@ -15,9 +15,7 @@ app.use(cors({
 }));
 app.use(express.json());
 
-app.post('/signup', () => {
-  //logica para registrar un usuario
-})
+app.post('/signup', addUser)
 
 app.get('/usuarios', usuarios)
 

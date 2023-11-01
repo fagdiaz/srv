@@ -17,3 +17,16 @@ exports.usuarios = async (req, res) => {
         .json({ general: "Something went wrong, please try again"});          
     }
 };
+
+exports.addUser = async (req,res) => {
+    const usuariosRef = db.collection('usuarios');
+    const user = req.body.user;
+    try {
+        usuariosRef.doc("123").set(user); 
+        res.status()       
+    } catch (error) {
+        console.log("ocurrio un error", error)
+    }
+
+
+}
