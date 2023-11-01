@@ -2,6 +2,8 @@ const express = require('express');
 const cors = require('cors');
 
 //var app = express();
+
+const { productos } = require('./model/productos')
 const { usuarios, addUser } = require('./model/usuarios')
 
 
@@ -18,6 +20,8 @@ app.use(express.json());
 app.post('/signup', addUser)
 
 app.get('/usuarios', usuarios)
+
+app.get('/productos', productos)
 
 
 
