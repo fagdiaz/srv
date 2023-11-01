@@ -17,3 +17,15 @@ exports.productos = async (req, res) => {
         .json({ general: "Something went wrong, please try again"});          
     }
 };
+
+exports.addProduct = async (req, res) => {
+    const productosRef = db.collection('productos');
+    const product = req.body.product;
+    try {
+        const result = await productosRef.add(product);
+        res.status(200).json({ res: "ok", id: result.id });
+    } catch (error) {
+        res.status(500).json({ res: "fail", err: error })
+        console.log("Ocurrió un error", error)
+    }
+}
