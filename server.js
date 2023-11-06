@@ -5,7 +5,7 @@ const cors = require('cors');
 
 const { productos , addProduct} = require('./model/productos')
 const { usuarios, addUser,  obtenerUsuario } = require('./model/usuarios')
-const {addOrder} = require ('./model/pedidos')
+const {addOrder, updateOrder} = require ('./model/pedidos')
 
 
 
@@ -27,6 +27,7 @@ app.post('/productos', addProduct)
 app.get('/productos', productos)
 
 app.post('/addOrder', addOrder)
+app.post('/updateOrder', updateOrder)
 
 
 app.post('/signin', (req, res) => {
