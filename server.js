@@ -4,7 +4,8 @@ const cors = require('cors');
 //var app = express();
 
 const { productos , addProduct} = require('./model/productos')
-const { usuarios, addUser } = require('./model/usuarios')
+const { usuarios, addUser,  obtenerUsuario } = require('./model/usuarios')
+const {addOrder} = require ('./model/pedidos')
 
 
 
@@ -19,11 +20,13 @@ app.use(express.json());
 
 app.post('/signup', addUser)
 app.get('/usuarios', usuarios)
+app.get('/obtenerUsuario', obtenerUsuario)
 
 
 app.post('/productos', addProduct)
 app.get('/productos', productos)
 
+app.post('/addOrder', addOrder)
 
 
 app.post('/signin', (req, res) => {
