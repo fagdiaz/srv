@@ -31,3 +31,10 @@ exports.addUser = async (req,res) => {
 
 
 }
+
+exports.getUser = async (req, res) => {
+    const uid = req.body.uid;
+    console.log("llego")
+    console.log("UID", uid)
+    return res.json({res:"ok"})
+}
