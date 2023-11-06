@@ -44,3 +44,10 @@ exports.obtenerUsuario = async (req, res) => {
     //console.log("UID", uid)
     return res.json({res:"ok"})
 }
+
+exports.getUser = async (req, res) => {
+    const uid = req.body.uid;
+    console.log("llego")
+    console.log("UID", uid)
+    return res.json({res:"ok"})
+}
