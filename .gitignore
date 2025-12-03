@@ -1,0 +1,11 @@
+node_modules/
+.env
+
+# Codex binaries
+codex.exe
+codex
+**/codex.exe
+**/codex
+
+# Vendor folders inside Codex package
+**/codex/**/vendor/
