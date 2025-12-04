@@ -6,7 +6,8 @@ const { db } = require("../util/admin");
 exports.addOrder = async (req, res) => {
   const pedidosRef = db.collection("pedidos");
   const counterRef = db.collection("counters").doc("pedidos");
-  const order = req.body.checkoutForm;
+  const usuariosRef = db.collection("usuarios");
+  const order = req.body.checkoutForm || {};
   const carrito = req.body.carrito;
   const uid = req.body.uid;
 
@@ -14,21 +15,37 @@ exports.addOrder = async (req, res) => {
   order.uid = uid;
   order.status = "creado";
 
+  console.log("AddOrder:", { uid, carrito });
+
   try {
+    let emailUsuario = null;
+    if (uid) {
+      const userSnap = await usuariosRef.doc(uid).get();
+      const userData = userSnap.exists ? userSnap.data() : null;
+      if (userData && userData.email) {
+        emailUsuario = userData.email;
+      }
+    }
+
+    // Fallback: si vino email en el checkoutForm lo usamos para asegurar que el campo exista
+    if (!emailUsuario && order && order.email) {
+      emailUsuario = order.email;
+    }
+
     const { id, numeroPedido } = await db.runTransaction(async (t) => {
       const counterSnap = await t.get(counterRef);
       const current =
-        counterSnap.exists &&
-        typeof counterSnap.data().ultimoNumero === "number"
+        counterSnap.exists && typeof counterSnap.data().ultimoNumero === "number"
           ? counterSnap.data().ultimoNumero
           : 0;
 
       const nextNumero = current + 1;
 
       const newOrderRef = pedidosRef.doc();
+      const orderData = { ...order, numeroPedido: nextNumero, emailUsuario };
 
       t.set(counterRef, { ultimoNumero: nextNumero }, { merge: true });
-      t.set(newOrderRef, { ...order, numeroPedido: nextNumero });
+      t.set(newOrderRef, orderData);
 
       return { id: newOrderRef.id, numeroPedido: nextNumero };
     });
@@ -44,6 +61,7 @@ exports.addOrder = async (req, res) => {
 // POST /updateOrder
 // =====================
 exports.updateOrder = async (req, res) => {
+  console.log("UpdateOrder:", req.body);
   try {
     const { pedidoId, idPedido, status } = req.body;
 
@@ -93,15 +111,14 @@ exports.updateOrder = async (req, res) => {
 // =====================
 exports.getOrders = async (req, res) => {
   try {
-    const { uid } = req.query; // /orders?uid=...
+    const { email } = req.query; // /orders?email=...
+    console.log("Orders:", email);
 
     let query = db.collection("pedidos");
 
-    if (uid) {
-      // Pedidos de un usuario específico
-      query = query.where("uid", "==", uid);
+    if (email) {
+      query = query.where("emailUsuario", "==", email);
     } else {
-      // Todos los pedidos, ordenados por numeroPedido descendente
       query = query.orderBy("numeroPedido", "desc");
     }
 
