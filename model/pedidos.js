@@ -111,14 +111,32 @@ exports.updateOrder = async (req, res) => {
 // =====================
 exports.getOrders = async (req, res) => {
   try {
-    const { email } = req.query; // /orders?email=...
-    console.log("Orders:", email);
+    const { email, status, numeroPedido } = req.query;
+    console.log("Orders filtros:", { email, status, numeroPedido });
 
-    let query = db.collection("pedidos");
+    const pedidosRef = db.collection("pedidos");
+    let query = pedidosRef;
 
+    // Filtro por emailUsuario (para cliente o admin)
     if (email) {
       query = query.where("emailUsuario", "==", email);
-    } else {
+    }
+
+    // Filtro por estado
+    if (status) {
+      query = query.where("status", "==", status);
+    }
+
+    // Filtro por numeroPedido (exacto)
+    if (numeroPedido) {
+      const n = parseInt(numeroPedido, 10);
+      if (!Number.isNaN(n)) {
+        query = query.where("numeroPedido", "==", n);
+      }
+    }
+
+    // Si NO hay filtros, ordenamos por numeroPedido desc (vista general)
+    if (!email && !status && !numeroPedido) {
       query = query.orderBy("numeroPedido", "desc");
     }
 
@@ -131,7 +149,10 @@ exports.getOrders = async (req, res) => {
 
     return res.status(200).json(pedidos);
   } catch (error) {
-    console.error("Error en getOrders:", error);
-    return res.status(500).json({ error: "Error al obtener los pedidos" });
+    console.error("Error getOrders:", error);
+    return res
+      .status(500)
+      .json({ res: "error", msg: "Error interno en getOrders" });
   }
 };
+

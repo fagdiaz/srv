@@ -1,33 +1,47 @@
 const { db } = require("../util/admin");
 
 exports.usuarios = async (req, res) => {
-    const usuariosRef = db.collection('usuarios');
-    try{
-            usuariosRef.get().then((snapshot) => {
-            const data = snapshot.docs.map((doc) => ({
-            id: doc.id,
-            ...doc.data(),
-        }));
-            console.log(data);
-            return res.status(201).json(data);
-        })
-    } catch (error) {
-        return res
-        .status(500)
-        .json({ general: "Something went wrong, please try again"});          
-    }
+  const usuariosRef = db.collection("usuarios");
+
+  try {
+    const snapshot = await usuariosRef.get();
+
+    const data = snapshot.docs.map((doc) => {
+      const { pass, ...rest } = doc.data();
+      return {
+        uid: doc.id,
+        ...rest,
+      };
+    });
+
+    return res.status(200).json(data);
+  } catch (error) {
+    console.error("Error en /usuarios:", error);
+    return res
+      .status(500)
+      .json({ general: "Something went wrong, please try again" });
+  }
 };
 
 exports.addUser = async (req, res) => {
-  const usuariosRef = db.collection('usuarios');
+  const usuariosRef = db.collection("usuarios");
   const user = req.body.user || {};
   const uid = req.body.uid;
 
-  console.log("Signup:", user, uid);
+  console.log("Signup addUser:", uid, user.email);
+
+  if (!uid || !user.email) {
+    return res
+      .status(400)
+      .json({ res: "fail", message: "Faltan datos obligatorios" });
+  }
 
   const usuarioPayload = {
     email: user.email,
+    nombre: user.nombre || "",
     rol: "cliente",
+    proveedor: "email",
+    createdAt: new Date().toISOString(),
   };
 
   if (user.dni) usuarioPayload.dni = user.dni;
@@ -35,8 +49,8 @@ exports.addUser = async (req, res) => {
   if (user.fnac) usuarioPayload.fnac = user.fnac;
 
   try {
-    await usuariosRef.doc(uid).set(usuarioPayload);
-    return res.status(200).json({ res: "ok", usuarioCreado: true });
+    await usuariosRef.doc(uid).set(usuarioPayload, { merge: true });
+    return res.status(200).json({ res: "ok", usuario: usuarioPayload });
   } catch (error) {
     console.error("Ocurrio un error", error);
     return res.status(500).json({ res: "fail", err: error });
@@ -70,7 +84,7 @@ exports.obtenerUsuario = async (req, res) => {
 
     return res.status(200).json({
       res: "ok",
-      usuario: data
+      usuario: { uid, ...data }
     });
   } catch (error) {
     console.error("Error en obtenerUsuario:", error);
@@ -93,6 +107,8 @@ exports.getUser = async (req, res) => {
 exports.googleLogin = async (req, res) => {
   try {
     const { uid, email, displayName } = req.body;
+
+    console.log("GoogleLogin:", uid, email);
 
     if (!uid || !email) {
       return res.status(400).json({
@@ -125,10 +141,13 @@ exports.googleLogin = async (req, res) => {
     } else {
       // Usuario ya existente: devolvemos sus datos
       const data = docSnap.data();
+      if (!data.rol) {
+        await docRef.set({ rol: "cliente" }, { merge: true });
+      }
       return res.status(200).json({
         res: "ok",
         nuevo: false,
-        usuario: data
+        usuario: { ...data, rol: data.rol || "cliente" }
       });
     }
   } catch (error) {

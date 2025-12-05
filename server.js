@@ -4,6 +4,7 @@ const cors = require('cors');
 const { productos, addProduct } = require('./model/productos');
 const { usuarios, addUser, obtenerUsuario, googleLogin } = require('./model/usuarios');
 const { addOrder, updateOrder, getOrders } = require('./model/pedidos');
+const { addMessage, getMessages } = require('./model/chat');
 
 // Initialize Firebase
 const app = express();
@@ -21,6 +22,9 @@ app.post('/google-login', googleLogin);
 
 app.post('/productos', addProduct);
 app.get('/productos', productos);
+
+app.post('/chat', addMessage);
+app.get('/chat', getMessages);
 
 app.post('/addOrder', addOrder);
 app.post('/updateOrder', updateOrder);
