@@ -1,10 +1,10 @@
-const express = require('express');
+﻿const express = require('express');
 const cors = require('cors');
 
 const { productos, addProduct } = require('./model/productos');
 const { usuarios, addUser, obtenerUsuario, googleLogin } = require('./model/usuarios');
 const { addOrder, updateOrder, getOrders } = require('./model/pedidos');
-const { addMessage, getMessages } = require('./model/chat');
+const { addMessage, getMessages, getConversationsRoute } = require('./model/chat');
 
 // Initialize Firebase
 const app = express();
@@ -25,10 +25,11 @@ app.get('/productos', productos);
 
 app.post('/chat', addMessage);
 app.get('/chat', getMessages);
+app.get('/chat/conversaciones', getConversationsRoute);
 
 app.post('/addOrder', addOrder);
 app.post('/updateOrder', updateOrder);
-app.get('/orders', getOrders); // 👈 nueva ruta
+app.get('/orders', getOrders); // ?'^ nueva ruta
 
 app.post('/signin', (req, res) => {
   const { email, password } = req.body;
@@ -40,7 +41,7 @@ app.post('/signin', (req, res) => {
     const token = jwt.sign({ email }, secretKey);
     res.json({ token });
   } else {
-    res.status(401).json({ error: 'Credenciales inválidas' });
+    res.status(401).json({ error: 'Credenciales inv\x81lidas' });
   }
 });
 
