@@ -6,6 +6,7 @@ const { usuarios, addUser, obtenerUsuario, googleLogin } = require('./model/usua
 const { addOrder, updateOrder, getOrders } = require('./model/pedidos');
 const { addMessage, getMessages, getConversationsRoute } = require('./model/chat');
 
+
 // Initialize Firebase
 const app = express();
 app.use(cors({
@@ -26,6 +27,7 @@ app.get('/productos', productos);
 app.post('/chat', addMessage);
 app.get('/chat', getMessages);
 app.get('/chat/conversaciones', getConversationsRoute);
+
 
 app.post('/addOrder', addOrder);
 app.post('/updateOrder', updateOrder);
