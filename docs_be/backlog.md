@@ -2,9 +2,8 @@
 
 ## Completadas
 - TAREA 14: /chat/unread implementado con leidoPor y conteo por chatId.
-
-## En progreso
-- TAREA 5: marcado de leidos en GET /chat y sincronizacion con /chat/unread.
+- TAREA 5: marcado de leidos en GET /chat y sincronizacion con /chat/unread (usa markMessagesAsReadForUser).
+- TAREA 6: fix definitivo de badge unread (FE+BE) usando getUnreadCountsByChatForUser.
 
 ## Pendientes / Futuras
 - Endpoint de busqueda avanzada (si se implementa).

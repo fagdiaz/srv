@@ -46,9 +46,9 @@ Este documento define como trabajamos en el backend (Node.js + Express + Firebas
 ## Pruebas minimas (BE)
 - Chat (`model/chat.js`):
   - POST `/chat` crea mensaje con `chatId`, `participantes`, `leidoPor` con remitente.
-  - GET `/chat` usa `chatId`, `limit`, orden desc/asc, y marca `leidoPor` para `uidActual` (batch).
+  - GET `/chat` usa `chatId`, `limit`, orden desc/asc, y marca `leidoPor` para `uidActual` via `markMessagesAsReadForUser` (batch commit antes de responder).
   - GET `/chat/conversaciones` lista ultimas conversaciones.
-  - GET `/chat/unread` devuelve conteo por `chatId` (usa `leidoPor`).
+  - GET `/chat/unread` devuelve conteo por `chatId` usando `getUnreadCountsByChatForUser` (mismo criterio `isUnreadForUser` que el marcado).
 - Usuarios: `/signup`, `/usuarios`, `/obtenerUsuario`, `/google-login` devuelven datos consistentes (sin `pass`).
 - Pedidos: `/addOrder`, `/updateOrder`, `/orders` funcionan; mantener compatibilidad de datos.
 - Productos: `/productos` estable.

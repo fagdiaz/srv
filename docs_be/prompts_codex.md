@@ -20,9 +20,9 @@
 - Mantener 500 para otros errores.
 
 ### TAREA 5 (marcado de leidos)
-- Scope: `model/chat.js` en GET `/chat`.
-- Objetivo: aceptar `uidActual` + (`uidOtro` o `chatId`) + `limit`, consultar por `chatId` + `orderBy timestamp desc` + `limit`, invertir para responder asc, marcar `leidoPor` en batch para mensajes recibidos por `uidActual`.
-- No tocar `/chat/unread` ni `/chat/conversaciones`.
+- Scope: `model/chat.js` en GET `/chat` (y helpers compartidos).
+- Objetivo: usar `markMessagesAsReadForUser` y `isUnreadForUser` para marcar antes de responder; `GET /chat/unread` debe usar `getUnreadCountsByChatForUser` con el mismo criterio.
+- No tocar `/chat/unread` ni `/chat/conversaciones` fuera de compartir lógica.
 
 ## Consejos
 - Pasar el archivo original y el objetivo exacto.

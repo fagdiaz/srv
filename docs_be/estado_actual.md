@@ -7,8 +7,10 @@ Backend operativo en Node + Express + Firebase Admin (Firestore). Rutas principa
 ## 2. Chat
 - Rutas: POST /chat, GET /chat, GET /chat/conversaciones, GET /chat/unread.
 - Estructura mensajes: `chatId` deterministico (uids ordenados), uids/emails remitente/destinatario, `texto`, `timestamp`, `tipo="privado"`, `participantes`, `leidoPor` (incluye remitente al crear; legacy sin `leidoPor` se consideran `[]`).
-- GET /chat: acepta uidActual + (uidOtro o chatId), `limit` (default 10), consulta por `chatId` + `orderBy timestamp desc` + limit, responde asc y marca `leidoPor` para uidActual cuando corresponde (batch).
-- /chat/unread: cuenta no leidos usando `leidoPor` (uidActual participante y no en `leidoPor`).
+- Criterio unico de no leido (`isUnreadForUser`): usuario participa, no es el remitente y no aparece en `leidoPor`; si `leidoPor` falta se trata como vacio.
+- GET /chat: acepta uidActual + (uidOtro o chatId), `limit` (default 10), consulta por `chatId` + `orderBy timestamp desc` + limit, responde asc y antes marca como leidos via `markMessagesAsReadForUser` (batch con commit previo). Incluye `leidoPor` normalizado en la respuesta.
+- /chat/unread: usa `getUnreadCountsByChatForUser` con el mismo criterio que GET /chat para contar no leidos.
+- Logs QA: `[chat] markMessagesAsReadForUser { chatId, userId, found, updated }`, `[chat] getUnreadCountsByChatForUser { userId, totalChats }`.
 - /chat/conversaciones: ultimo mensaje por chatId para uidActual.
 - Cuotas: errores de Firestore code 8 devuelven 503 `quota_exceeded`.
 
@@ -19,7 +21,8 @@ Backend operativo en Node + Express + Firebase Admin (Firestore). Rutas principa
 
 ## 4. Estado de Tareas (chat)
 - TAREA 14: completada (/chat/unread).
-- TAREA 5: pendiente de consolidar/ajustar marcado de leidos en GET /chat para que los unread bajen inmediatamente despues de abrir la conversacion.
+- TAREA 5: completada (marcado de leidos en GET /chat con `markMessagesAsReadForUser`).
+- TAREA 6: completada (coordinacion FE+BE para badge unread usando `getUnreadCountsByChatForUser`).
 
 ## 5. Manejo de errores
 - 503 `quota_exceeded` en usuarios (obtenerUsuario) y rutas de chat si Firestore quota falla.

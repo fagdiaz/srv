@@ -5,9 +5,9 @@ Este archivo registra las tareas activas, pendientes y completadas del BACKEND d
 ---
 
 ## MUST
-- Terminar marcado de leidos en GET /chat (TAREA 5) y sincronizar con `/chat/unread`.
-- Confirmar que `/chat/unread` baja contadores despues de leer.
-- Documentar y validar todos los indices Firestore usados por chat (chatId+timestamp, participantes+timestamp).
+- Documentar de forma centralizada los indices Firestore usados por chat (chatId+timestamp, participantes+timestamp).
+- (Opcional) Agregar ejemplos JSON breves de request/response para `/chat`, `/chat/unread`, `/chat/conversaciones`.
+- Preparar un checklist de pruebas rapidas para futuras modificaciones del chat (unread, quota_exceeded, indices).
 
 ## NICE TO HAVE
 - Endpoint dedicado de busqueda si se necesita.
@@ -21,7 +21,7 @@ Este archivo registra las tareas activas, pendientes y completadas del BACKEND d
 - [ ] Registrar timestamp del servidor en vez del cliente (opcional).
 - [ ] Agregar logs legibles para depuracion.
 - [ ] Verificar indice Firestore requerido (participantes + timestamp) y documentarlo.
-- [ ] Confirmar funcionamiento de marcado de leidos y conteo en `/chat/unread`.
+- [ ] Checklist de pruebas rapidas para cambios de chat (unread, quota_exceeded, indices).
 
 ## Seccion 2 - Usuarios (model/usuarios.js)
 - [ ] Validar email antes de crear documento.

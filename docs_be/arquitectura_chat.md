@@ -113,7 +113,7 @@ Logica:
     .orderBy("timestamp", "desc")
     .limit(limit)
   ```
-- Marca como leidos (`leidoPor`) en batch para mensajes donde `uidActual` es participante, `uidRemitente` != `uidActual` y `uidActual` no estaba en `leidoPor`.
+- Marca como leidos (`leidoPor`) en batch para mensajes no leidos segun `isUnreadForUser` usando `markMessagesAsReadForUser` (commit antes de responder).
 - Devuelve array de mensajes en orden ascendente (se invierte antes de responder).
 
 ### 5.3 GET /chat/conversaciones - Listar conversaciones de un usuario
@@ -126,7 +126,7 @@ Handler: `getConversationsRoute(req, res)`
 Handler: `getUnreadRoute(req, res)`
 
 - Entrada: `uidActual` (query).
-- Cuenta mensajes donde `participantes` contiene `uidActual` y `leidoPor` no incluye `uidActual`; devuelve `{ chatId, unread }`.
+- Usa `getUnreadCountsByChatForUser` con el mismo criterio de `isUnreadForUser`; devuelve `{ chatId, unread }`.
 - Maneja error de indice faltante con mensaje de Firestore y errores de cuota con 503.
 
 ---
