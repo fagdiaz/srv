@@ -5,105 +5,57 @@ Este documento define como quiero que la IA trabaje conmigo para lograr cambios 
 
 ---
 
-# 1. Estructura de Roles / Agentes
+# 1. Estructura de Roles / Agentes (Backend)
 
 Los agentes NO son codigo del proyecto.  
-Son roles mentales que adopta la IA cuando les doy un prompt especifico.
+Son roles mentales para organizar el trabajo.
+
+## Coordinador
+Objetivo: alinear backlog y prioridades BE, decidir alcance y tiempos.
 
 ## PM  Planificador
-Objetivo: analizar un objetivo, definir el alcance y producir un plan claro.
+Objetivo: analizar objetivo y producir plan claro (requisitos, riesgos, MUST/NICE).
 
-### Prompt:
-"Actua como PM tecnico senior en Angular + Node. Te doy objetivo y contexto.  
-Necesito:  
-- Objetivo claro  
-- Requerimientos funcionales  
-- Requerimientos tecnicos  
-- Riesgos  
-- Lista de tareas MUST / NICE TO HAVE  
-No generes codigo. Solo planificacion."
+## Arquitecto BE
+Objetivo: definir blueprint tecnica (componentes, rutas, flujos FEBE, indices Firestore, uso de emulator, manejo de quotas).
 
----
+## Implementador BE
+Objetivo: escribir codigo o prompts para Codex BE, acotados a archivos permitidos.  
+- Para chat: respetar `chatId`, `participantes`, `leidoPor`, indices de Firestore.  
+- Para Firestore: indicar indices requeridos y opcion de emulator.
 
-## Arquitecto  Diseno Tecnico
-Objetivo: transformar el plan del PM en arquitectura concreta.
+## QA / Debugger
+Objetivo: revisar bugs, logs, cuotas, indices. Verificar 500 vs 503, mensajes de indice requerido y errores de Firestore.
 
-### Prompt:
-"Actua como Arquitecto. Toma este plan del PM.  
-Necesito:  
-- Componentes y servicios a modificar/crear  
-- Cambios en el backend  
-- Flujos de datos FEBE  
-- Interfaces recomendadas  
-No generes codigo final. Solo la blueprint tecnica."
+## Codex BE
+Objetivo: aplicar cambios pequenos por archivo. No tocar FE. Seguir prompts con scope, restricciones y formato de entrega.
 
 ---
 
-## Implementador  Generador de Codigo y Prompts para Codex
-Objetivo: convertir la arquitectura en codigo o en prompts para Codex.
-
-### Prompt para generar codigo:
-"Actua como Implementador. Basado en esta arquitectura, genera codigo completo para los archivos: [lista].  
-Devolve los archivos completos, sin TODOs ni comentarios basura."
-
-### Prompt para generar prompts Codex:
-"Actua como Implementador especializado en preparar prompts para Codex.
-Quiero hacer este cambio: [describir cambio].  
-Genera:  
-- Prompt para Codex FE  
-- Prompt para Codex BE  
-Cada uno debe indicar:  
-- Archivos a tocar  
-- Objetivo  
-- Que NO tocar  
-- Cambios moderados  
-- Entrega en diffs/snippets claros."
-
----
-
-## Debugger / QA  Revisor
-Objetivo: encontrar problemas y sugerir mejoras.  
-"Actua como QA/Debugger. Dame hallazgos priorizados y riesgos."
-
----
-
-# 2. Reglas Generales para la IA
-- No inventar archivos ni rutas: si no existe, decir "NO ENCONTRADO".
-- Mantener cambios minimos y claros; usar diffs/snippets.
-- Validar parametros y datos; no suponer.
-- Evitar cambios en frontend si el pedido es backend, y viceversa.
-- Documentar supuestos y riesgos cuando algo no este claro.
-
----
-
-# 3. Flujo de Trabajo Recomendado
-
-Este es el proceso ideal para cambios grandes o complejos:
+# 2. Flujo de Trabajo Recomendado
 
 1. **PM:** definimos objetivo y tareas  
 2. **Arquitecto:** definimos como se resuelve  
 3. **Implementador:** generamos cambios o prompts Codex  
-4. **Codex:** aplica cambios en FE o BE  
-5. **Debugger:** revisa que este todo bien  
-6. **Prueba real en tu maquina**  
+4. **Codex:** aplica cambios en BE  
+5. **QA:** revisa logs/errores/indices/quotas  
+6. **Prueba real en tu maquina** (idealmente contra Firestore Emulator primero)  
 7. **Iteracion con cambios pequenos**
-
-Esto reduce errores y evita romper el proyecto.
 
 ---
 
-# 4. Ventajas del Sistema
+# 3. Ventajas del Sistema
 
 - Trabajo mas limpio y ordenado  
 - Cambios chicos y verificables  
 - Menos errores y menos tiempo perdido  
 - Documentacion automatica  
 - Codex recibe prompts mas claros -> resultados mas precisos  
-- Evita cambios gigantes que rompen todo (paso varias veces antes)
+- Evita cambios gigantes que rompen todo
 
 ---
 
-# 5. Como empezar cada dia
+# 4. Como empezar cada dia
 
 En una nueva conversacion de ChatGPT, pega esto:
 
@@ -113,6 +65,6 @@ Arranquemos con el agente PM para planificar la tarea del dia: [objetivo]."
 
 ---
 
-# 6. Notas para el Futuro
+# 5. Notas para el Futuro
 - Este documento puede ampliarse a medida que agreguemos Ionic, test unitarios o despliegue.  
 - Podes agregar roles extra (por ejemplo: Disenador UI/UX).

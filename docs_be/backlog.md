@@ -1,17 +1,13 @@
 ﻿# Backlog - rusticoslanus (Backend)
 
-## Pendientes Proximo Sprint
-- Chat: ajustar estilos del input, validar `unread` en UI, mejorar scroll automatico, panel de conversaciones mas limpio.
-- App general: terminar Ionic/mobile, agregar observaciones al carrito, mejorar vistas /users (pipe filtro), carrusel y carga de imagenes en productos, test login/signout/roles, revisar seguridad de rutas FE.
+## Completadas
+- TAREA 14: /chat/unread implementado con leidoPor y conteo por chatId.
 
-## Ideas Futuras
-- Metricas de uso del chat (tiempos de respuesta, conteo por rol).
-- Notificaciones push/email para mensajes no leidos prolongados.
-- Tests de integracion BE (endpoints chat/usuarios/pedidos) con emulador Firestore.
-- Auditoria basica (logs estructurados) en endpoints sensibles.
+## En progreso
+- TAREA 5: marcado de leidos en GET /chat y sincronizacion con /chat/unread.
 
-## Riesgos / Deudas Tecnicas
-- Sin autenticacion/verificacion de UID en backend (riesgo de suplantacion).
-- Indices Firestore para chat (array-contains + orderBy) deben confirmarse/crearse.
-- Validaciones minimas en payloads (tamanos de texto, formatos email).
-- Inconsistencias menores en `productos.js` (mezcla async/await con .then, codigos de estado).
+## Pendientes / Futuras
+- Endpoint de busqueda avanzada (si se implementa).
+- Logging mas estructurado (JSON logs).
+- Uso sistematico del Firestore Emulator para dev/test.
+- Documentar y validar indices Firestore de chat (participantes + timestamp, chatId + timestamp).

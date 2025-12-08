@@ -4,23 +4,28 @@
 - Siempre pedir cambios pequenos y por archivo.
 - Incluir: objetivo, archivo(s), restricciones, que NO tocar, formato de entrega (diff/snippet).
 - No dejar que elimine imports o metodos desconocidos.
+- Si aplica, mencionar indices Firestore (chatId+timestamp, participantes+timestamp) y uso opcional de emulator.
 
-## Plantillas
+## Plantillas / Ejemplos
 
-### Prompt Codex BE (codigo)
-"Actua como Codex backend. Objetivo: [describir].
-Archivo(s): [ruta].
-No tocar: [listar].
-Restricciones: [frameworks/versiones].
-Entrega: diff claro o archivo completo si es pequeno.
-Validar inputs y no romper otras rutas."
+### TAREA 1 (/chat/unread)
+- Scope: `model/chat.js` (y `server.js` solo si falta ruta).
+- Objetivo: implementar conteo de no leidos por `chatId` usando `leidoPor`.
+- No tocar otras rutas.
+- Respuesta: lista `{ chatId, unread }`.
 
-### Prompt Codex BE (revision)
-"Actua como revisor backend. Revisa archivo/diff. Senala bugs, riesgos, validaciones faltantes. No sugerir refactors enormes, solo mejoras puntuales."
+### TAREA 3 (quota_exceeded)
+- Scope: `model/usuarios.js`, `model/chat.js`.
+- Objetivo: si Firestore devuelve code 8 / "quota exceeded", responder 503 `{ error: "quota_exceeded" }`.
+- Mantener 500 para otros errores.
+
+### TAREA 5 (marcado de leidos)
+- Scope: `model/chat.js` en GET `/chat`.
+- Objetivo: aceptar `uidActual` + (`uidOtro` o `chatId`) + `limit`, consultar por `chatId` + `orderBy timestamp desc` + `limit`, invertir para responder asc, marcar `leidoPor` en batch para mensajes recibidos por `uidActual`.
+- No tocar `/chat/unread` ni `/chat/conversaciones`.
 
 ## Consejos
 - Pasar el archivo original y el objetivo exacto.
-- Si hay indices Firestore requeridos, mencionarlos en el prompt.
-- Para chat, recordar `chatId`, `leidoPor`, `participantes`, `tipo` siempre `privado`.
-- Para usuarios, doc id = UID Firebase Auth, rol default `cliente`, sin `pass`.
+- Indicar que no se modifiquen rutas ni esquemas (chatId, participantes, leidoPor).
 - Evitar cambios en frontend desde esta consola (scope backend).
+- Aclarar si se debe usar emulator (opcional) o indices Firestore requeridos.

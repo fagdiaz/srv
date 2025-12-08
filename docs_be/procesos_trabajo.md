@@ -24,13 +24,13 @@ Este documento define como trabajamos en el backend (Node.js + Express + Firebas
 ---
 
 ## Flujo recomendado
-1) **Detectar** necesidad (bug/feature) y confirmar que es BE.
-2) **Contexto**: leer `estado_actual.md` + `backlog.md` y copiar fragmentos de codigo relevantes.
-3) **Prompt pequeno** a Codex (un archivo/funcion por vez; usar `prompts_codex.md`).
-4) **Ejecutar** cambio en Codex.
-5) **Probar local** (`node server.js` o tests manuales de endpoints afectados).
-6) **Revisar** (auto-QA) que solo se tocaron archivos esperados; mirar logs/errores.
-7) **Actualizar docs** si cambia estado o backlog.
+1) **PM/Coordinador** acuerda objetivo y tarea (MUST/NICE) en backlog.
+2) **Arquitecto BE** define blueprint (archivos, rutas, indices, emulator si aplica).
+3) **Implementador BE** prepara prompt para Codex (scope de archivos, que tocar/que no, formato diff/snippet).
+4) **Codex** aplica cambio acotado en BE.
+5) **QA** verifica logs/errores/indices/quotas, 500 vs 503, y que no rompa FE.
+6) Probar local (preferible primero contra Firestore Emulator).
+7) Actualizar docs/backlog si aplica.
 
 ---
 
@@ -40,19 +40,26 @@ Este documento define como trabajamos en el backend (Node.js + Express + Firebas
 - Cambios chicos y atomicos; revisar con `git diff`.
 - No alterar `chatId` ni estructuras Firestore sin pedido explicito.
 - No agregar dependencias externas sin aprobacion.
-- Si Codex toca archivos indebidos, descartar y reintentar con prompt mas preciso.
 
 ---
 
 ## Pruebas minimas (BE)
 - Chat (`model/chat.js`):
-  - POST `/chat` crea mensaje con `chatId`, `participantes`, `leidoPor` (vacio al crear).
-  - GET `/chat` trae solo mensajes del par de UIDs, marca `leidoPor` para `uidActual`.
+  - POST `/chat` crea mensaje con `chatId`, `participantes`, `leidoPor` con remitente.
+  - GET `/chat` usa `chatId`, `limit`, orden desc/asc, y marca `leidoPor` para `uidActual` (batch).
   - GET `/chat/conversaciones` lista ultimas conversaciones.
-  - GET `/chat/unread` devuelve conteo por `chatId`.
-- Usuarios (`model/usuarios.js`): `/signup`, `/usuarios`, `/obtenerUsuario`, `/google-login` devuelven datos consistentes (sin `pass`).
+  - GET `/chat/unread` devuelve conteo por `chatId` (usa `leidoPor`).
+- Usuarios: `/signup`, `/usuarios`, `/obtenerUsuario`, `/google-login` devuelven datos consistentes (sin `pass`).
 - Pedidos: `/addOrder`, `/updateOrder`, `/orders` funcionan; mantener compatibilidad de datos.
 - Productos: `/productos` estable.
+
+---
+
+## QA / Debug
+- Revisar logs: que GET/POST no spamee y marquen errores claros.
+- Errores: 500 para generales, 503 `quota_exceeded` si Firestore devuelve code 8 o quota exceeded.
+- Indices: atender mensajes de Firestore, crear indice (chatId+timestamp, participantes+timestamp) si lo pide.
+- Emulator: cuando se pueda, probar primero con Firestore Emulator (envs `USE_FIRESTORE_EMULATOR` o `FIRESTORE_EMULATOR_HOST`).
 
 ---
 
@@ -69,19 +76,11 @@ Este documento define como trabajamos en el backend (Node.js + Express + Firebas
 
 ---
 
-## Seguridad minima
-- No exponer claves/creds en el repo.
-- No loguear datos sensibles en produccion.
-- Validar payloads en endpoints criticos.
-- Manejar errores con try/catch en modelos.
-
----
-
 ## Resumen operativo
 1. Identificar problema/tarea (BE).
 2. Revisar `estado_actual.md` y `backlog.md`.
 3. Preparar prompt chico (ver `prompts_codex.md`).
 4. Ejecutar en Codex.
-5. Probar local.
-6. Revisar diff.
+5. Probar local (ideal emulator primero).
+6. Revisar diff y logs/errores/indices.
 7. Actualizar docs si aplica.

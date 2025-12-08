@@ -1,5 +1,5 @@
 ﻿# Arquitectura del Chat - Backend RusticosLanus (/srv)
-Ultima actualizacion: [poner fecha]
+Ultima actualizacion: 08/12/2025
 
 Este documento describe como esta implementado el chat privado 1 a 1 en el backend de Rusticos Lanus.
 
@@ -18,17 +18,7 @@ Este documento describe como esta implementado el chat privado 1 a 1 en el backe
 
 ## 2. Archivos involucrados
 ### 2.1 `server.js`
-- Importa las funciones desde `model/chat.js`:
-  ```js
-  const { addMessage, getMessages, getConversationsRoute, getUnreadRoute } = require('./model/chat');
-  ```
-- Define las rutas relacionadas al chat:
-  ```js
-  app.post('/chat', addMessage);
-  app.get('/chat', getMessages);
-  app.get('/chat/conversaciones', getConversationsRoute);
-  app.get('/chat/unread', getUnreadRoute); // pendiente de integracion completa FE
-  ```
+- Importa las funciones desde `model/chat.js` y define rutas `/chat`, `/chat/conversaciones`, `/chat/unread`.
 
 ### 2.2 `model/chat.js`
 Contiene la logica principal del chat:
@@ -36,7 +26,7 @@ Contiene la logica principal del chat:
 - `getMessages` (GET /chat)
 - `getConversations` (funcion interna)
 - `getConversationsRoute` (GET /chat/conversaciones)
-- `getUnreadRoute` (GET /chat/unread) - base para no leidos
+- `getUnreadRoute` (GET /chat/unread)
 
 Usa `db` de `util/admin.js` para hablar con Firestore.
 
@@ -61,9 +51,11 @@ Cada documento representa un mensaje individual. Campos tipicos:
   "timestamp": 1234567890,
   "tipo": "privado",
   "participantes": ["uidA", "uidB"],
-  "leidoPor": ["uidX"] // arranca vacio en addMessage
+  "leidoPor": ["uidRemitente"]
 }
 ```
+`chatId` se arma con los dos uids ordenados para que sea deterministico.
+- `leidoPor` siempre se inicializa con el remitente; mensajes legacy sin `leidoPor` se consideran `[]` al contar no leidos.
 
 ---
 
@@ -73,7 +65,7 @@ En `model/chat.js`:
 ```js
 const buildChatId = (uidA, uidB) => {
   if (!uidA || !uidB) return null;
-  return [uidA, uidB].sort().join("_"); // ej: "uidCliente_uidOperador"
+  return [uidA, uidB].sort().join("_");
 };
 ```
 - Ordena alfabeticamente los dos UIDs.
@@ -101,7 +93,7 @@ Logica:
 - Valida que existan `uidRemitente`, `uidDestinatario` y `texto`.
 - Calcula `chatId = buildChatId(uidRemitente, uidDestinatario)`.
 - Resuelve emails: si no vienen, los busca en `usuarios/{uid}`.
-- Crea un doc en `mensajes` con los campos indicados (incluye `leidoPor: []`).
+- Crea un doc en `mensajes` con los campos indicados (incluye `leidoPor` con el remitente marcado).
 - Responde `{ res: "ok", id: "<id mensaje>", timestamp }`.
 
 ### 5.2 GET /chat - Listar mensajes entre dos usuarios
@@ -109,108 +101,56 @@ Handler: `getMessages(req, res)`
 
 Entrada (query params):
 - `uidActual` (obligatorio)
-- `uidOtro` (obligatorio)
-- `limit` (opcional, default 50)
+- `uidOtro` o `chatId` (uno de los dos)
+- `limit` (opcional, default 10)
 
 Logica:
-- Valida presencia de `uidActual` y `uidOtro`.
-- Calcula `chatId` con `buildChatId`.
+- Valida presencia de `uidActual` y deriva `chatId` con `buildChatId` si viene `uidOtro`.
 - Consulta Firestore:
   ```js
   db.collection("mensajes")
     .where("chatId", "==", chatId)
-    .orderBy("timestamp", "asc")
-    .limit(effectiveLimit)
+    .orderBy("timestamp", "desc")
+    .limit(limit)
   ```
-- Marca como leidos (`leidoPor`) los mensajes que no incluian `uidActual`.
-- Devuelve array de mensajes ordenados por timestamp.
+- Marca como leidos (`leidoPor`) en batch para mensajes donde `uidActual` es participante, `uidRemitente` != `uidActual` y `uidActual` no estaba en `leidoPor`.
+- Devuelve array de mensajes en orden ascendente (se invierte antes de responder).
 
 ### 5.3 GET /chat/conversaciones - Listar conversaciones de un usuario
 Handler: `getConversationsRoute(req, res)`
 
-Entrada (query params): `uidActual` (obligatorio), `limit` (opcional)
+- Entrada: `uidActual` (obligatorio), `limit` (opcional).
+- Agrupa por `chatId` y devuelve ultimo mensaje + `uidOtro`/`emailOtro`.
 
-Logica interna (`getConversations`):
-- Valida que `uidActual` exista.
-- Consulta Firestore:
-  ```js
-  db.collection("mensajes")
-    .where("participantes", "array-contains", uidActual)
-    .orderBy("timestamp", "desc")
-    .limit(effectiveLimit)
-  ```
-- Recorre los mensajes (orden desc), construye un `Map` por `chatId` y se queda con el mensaje mas reciente de cada `chatId`.
-- Para cada conversacion guarda:
-  ```json
-  {
-    "chatId": "...",
-    "uidOtro": "...",
-    "emailOtro": "...",
-    "ultimoMensaje": "...",
-    "timestamp": 1234567890
-  }
-  ```
-  donde `uidOtro` es el otro participante (no `uidActual`), y `emailOtro` proviene de `emailRemitente` o `emailDestinatario` segun corresponda.
-- Devuelve array de conversaciones.
-
-### 5.4 GET /chat/unread - Base para mensajes no leidos
+### 5.4 GET /chat/unread - Conteo de no leidos
 Handler: `getUnreadRoute(req, res)`
 
-- Declarado en `server.js`, importado desde `model/chat.js`.
-- Comportamiento final pendiente de integracion completa con FE.
-- Idea: dado `uidActual`, devolver recuento de mensajes no leidos por `chatId` usando `leidoPor` y actualizaciones al visualizar una conversacion.
+- Entrada: `uidActual` (query).
+- Cuenta mensajes donde `participantes` contiene `uidActual` y `leidoPor` no incluye `uidActual`; devuelve `{ chatId, unread }`.
+- Maneja error de indice faltante con mensaje de Firestore y errores de cuota con 503.
 
 ---
 
-## 6. Resolucion de emails (`resolveEmail`)
-Funcion auxiliar en `model/chat.js`:
-```js
-const resolveEmail = async (uid, providedEmail) => {
-  if (providedEmail) return providedEmail;
-  const snap = await db.collection("usuarios").doc(uid).get();
-  if (!snap.exists) return null;
-  const data = snap.data() || {};
-  return data.email || null;
-};
-```
-Uso:
-- Tanto en remitente como en destinatario. Permite que el FE omita los emails si existen en la coleccion `usuarios`.
+## 6. Indices requeridos (Firestore)
+- Coleccion `mensajes`:
+  - GET /chat: indice compuesto `chatId ==` + `timestamp desc`.
+  - GET /chat/unread: indice compuesto `participantes array-contains` + `timestamp desc`.
+  - Firestore suele ofrecer el link directo para crearlos si faltan.
 
 ---
 
-## 7. Errores y validaciones
-- Si faltan datos criticos en POST /chat: 400 `{ res: "error", msg: "Faltan datos" }`.
-- Si no se puede generar `chatId`: 400.
-- Si falla Firestore: 500 `{ res: "fail", msg: "Error al guardar/obtener mensajes" }`.
+## 7. Consistencia entre GET /chat y /chat/unread
+- GET /chat marca como leidos los mensajes recibidos por `uidActual` en esa conversacion.
+- GET /chat/unread usa `leidoPor` para contar no leidos; despues de abrir el chat, esos mensajes dejan de contarse.
 
 ---
 
-## 8. Indices recomendados en Firestore
-- Mensajes por `chatId` + `timestamp` (asc):
-  - `chatId` (==)
-  - `timestamp` (asc)
-- Conversaciones por `participantes` + `timestamp` (desc):
-  - `participantes` (array-contains)
-  - `timestamp` (desc)
-
-La consola de Firebase suele sugerir indices cuando se ejecutan las queries por primera vez.
+## 8. Manejo de errores y cuotas
+- Si Firestore devuelve `RESOURCE_EXHAUSTED` / code 8 (`quota exceeded`), las rutas de chat responden 503 `{ error: "quota_exceeded" }`.
+- Otros errores se responden con 500 o 400 segun validaciones.
 
 ---
 
-## 9. Relacion con el frontend
-- El FE nunca arma `chatId` a mano: envia `uidActual` y `uidOtro`.
-- El BE construye `chatId`, filtra mensajes por ese par y devuelve solo lo correspondiente a esa conversacion.
-- Permite que el FE omita emails si `usuarios/{uid}` los tiene.
-
----
-
-## 10. Pendientes del chat (solo BE)
-- Completar la logica de `/chat/unread`.
-- Mejorar logging (niveles info/warn/error).
-- Agregar validaciones extras en payload (longitud de texto, sanitizacion minima).
-- Documentar codigos de error si se extienden.
-- Opcional: timestamps de servidor y archivado si escala.
-
----
-
-Este documento debe actualizarse si cambian las rutas, el esquema de Firestore o se agrega funcionalidad (no leidos, adjuntos, etc.).
+## 9. Notas de desarrollo
+- Se puede usar Firestore Emulator seteando `USE_FIRESTORE_EMULATOR=true` o `FIRESTORE_EMULATOR_HOST=localhost:8080`.
+- No cambiar `chatId`, `participantes` ni `leidoPor` para no romper FE/BE existentes.

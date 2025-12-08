@@ -87,7 +87,15 @@ exports.obtenerUsuario = async (req, res) => {
       usuario: { uid, ...data }
     });
   } catch (error) {
+    const details = (error && error.details && String(error.details)) || "";
+    const isQuota =
+      error?.code === 8 ||
+      details.toLowerCase().includes("quota exceeded");
+
     console.error("Error en obtenerUsuario:", error);
+    if (isQuota) {
+      return res.status(503).json({ error: "quota_exceeded" });
+    }
     return res.status(500).json({
       res: "fail",
       message: "Error al obtener usuario",
