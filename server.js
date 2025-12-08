@@ -1,7 +1,13 @@
 ﻿const express = require('express');
 const cors = require('cors');
 
-const { productos, addProduct } = require('./model/productos');
+const {
+  productos,
+  getProducts,
+  addProduct,
+  updateProduct,
+  softDeleteProduct,
+} = require('./model/productos');
 const { usuarios, addUser, obtenerUsuario, googleLogin } = require('./model/usuarios');
 const { addOrder, updateOrder, getOrders } = require('./model/pedidos');
 const { addMessage, getMessages, getConversationsRoute, getUnreadRoute } = require('./model/chat');
@@ -23,6 +29,12 @@ app.post('/google-login', googleLogin);
 
 app.post('/productos', addProduct);
 app.get('/productos', productos);
+app.get('/products', getProducts);
+app.put('/products/:id', updateProduct);
+app.delete('/products/:id', softDeleteProduct);
+// Rutas POST para compatibilidad/uso actual de FE
+app.post('/products/update', updateProduct);
+app.post('/products/soft-delete', softDeleteProduct);
 
 app.post('/chat', addMessage);
 app.get('/chat', getMessages);

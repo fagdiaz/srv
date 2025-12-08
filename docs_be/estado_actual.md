@@ -2,7 +2,7 @@
 Ultima actualizacion: 08/12/2025
 
 ## 1. Descripcion General
-Backend operativo en Node + Express + Firebase Admin (Firestore). Rutas principales: usuarios, productos, pedidos, chat privado 1 a 1.
+Backend operativo en Node + Express + Firebase Admin (Firestore). Rutas principales: usuarios, pedidos, chat privado 1 a 1 y dos familias de endpoints de productos (legacy `/productos` y los nuevos `/products` con reglas de rol).
 
 ## 2. Chat
 - Rutas: POST /chat, GET /chat, GET /chat/conversaciones, GET /chat/unread.
@@ -30,7 +30,11 @@ Backend operativo en Node + Express + Firebase Admin (Firestore). Rutas principa
 
 ## 6. Pedidos / Productos / Usuarios
 - Pedidos: /addOrder, /updateOrder, /orders operativos; counters para numeracion.
-- Productos: GET/POST estables.
+- Productos:
+  - `/productos` sigue disponible para compatibilidad con el frontend (sigue funcionando el POST legado).
+  - `/products` (GET) requiere `uidActual`/`uid`, detecta el rol del usuario (`cliente`, `ordenador`, `admin`) y solo deja ver productos activos si el rol es `cliente`. Admin/ordenador ven la colección completa y pueden solicitar ordenamiento por campo `orden`.
+  - `/products/:id` (PUT) y `/products/:id` (DELETE) implementan actualizacion/selectiva y baja logica respectivamente; solo `admin` y `ordenador` pueden editar los campos permitidos (nombre, descripcion, precio, activo, imagenUrl, orden) o marcar `activo: false`.
+  - Para no romper integraciones, hay wrappers POST (`/products/update`, `/products/soft-delete`) que llaman a los mismos helpers (`updateProductData` y `softDeleteProductData`) y mantienen las respuestas usadas por el FE actual.
 - Usuarios: /signup, /usuarios, /obtenerUsuario, /google-login; doc id = UID, rol default cliente; sin `pass` en respuestas.
 
 ---

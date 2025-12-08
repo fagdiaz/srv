@@ -30,6 +30,7 @@ Este archivo registra las tareas activas, pendientes y completadas del BACKEND d
 - [ ] Endpoint para actualizar datos del usuario (si el TP lo requiere).
 
 ## Seccion 3 - Productos (model/productos.js)
+- Nota: ya existen endpoints `/products` (GET) y `/products/:id` (PUT/DELETE) con detección de rol (cliente/ordenador/admin) y soft delete, además de los wrappers POST `/products/update` y `/products/soft-delete` que reutilizan los mismos helpers.
 - [ ] Validar que no existan productos duplicados.
 - [ ] Soporte para imagenes multiples.
 - [ ] Guardar stock y permitir actualizarlo.
