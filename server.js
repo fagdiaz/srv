@@ -11,15 +11,24 @@ const {
 const { usuarios, addUser, obtenerUsuario, googleLogin } = require('./model/usuarios');
 const { addOrder, updateOrder, getOrders } = require('./model/pedidos');
 const { addMessage, getMessages, getConversationsRoute, getUnreadRoute } = require('./model/chat');
+const adminUsersRouter = require('./routes/adminUsers');
 
 
 // Initialize Firebase
 const app = express();
 app.use(cors({
-  allowedHeaders: '*',
-  origin: '*',
-  methods: ['GET', 'POST']
+  origin: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: [
+    'Origin',
+    'X-Requested-With',
+    'Content-Type',
+    'Accept',
+    'Authorization'
+  ],
+  credentials: true
 }));
+app.options('*', cors());
 app.use(express.json());
 
 app.post('/signup', addUser);
@@ -40,6 +49,8 @@ app.post('/chat', addMessage);
 app.get('/chat', getMessages);
 app.get('/chat/conversaciones', getConversationsRoute);
 app.get('/chat/unread', getUnreadRoute);
+
+app.use(adminUsersRouter);
 
 
 app.post('/addOrder', addOrder);
