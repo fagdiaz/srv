@@ -28,7 +28,7 @@ Este documento define como trabajamos en el backend (Node.js + Express + Firebas
 2) **Arquitecto BE** define blueprint (archivos, rutas, indices, emulator si aplica).
 3) **Implementador BE** prepara prompt para Codex (scope de archivos, que tocar/que no, formato diff/snippet).
 4) **Codex** aplica cambio acotado en BE.
-5) **QA** verifica logs/errores/indices/quotas, 500 vs 503, y que no rompa FE.
+5) **QA** verifica logs/errores/indices/quotas, 500 vs 503, que GET `/products` respete roles y que los endpoints de productos solo permitan admin.
 6) Probar local (preferible primero contra Firestore Emulator).
 7) Actualizar docs/backlog si aplica.
 
@@ -60,6 +60,7 @@ Este documento define como trabajamos en el backend (Node.js + Express + Firebas
 - Errores: 500 para generales, 503 `quota_exceeded` si Firestore devuelve code 8 o quota exceeded.
 - Indices: atender mensajes de Firestore, crear indice (chatId+timestamp, participantes+timestamp) si lo pide.
 - Emulator: cuando se pueda, probar primero con Firestore Emulator (envs `USE_FIRESTORE_EMULATOR` o `FIRESTORE_EMULATOR_HOST`).
+- Productos: verificar que admin puede alta/edicion/soft delete y recibe `{ res: "ok", producto }` (incluye `imagenUrl`), y que cliente/operador solo ven activos en GET `/products`.
 
 ---
 

@@ -40,6 +40,12 @@ Este archivo registra las tareas activas, pendientes y completadas del BACKEND d
 - [ ] Validar que el carrito no este vacio.
 - [ ] Confirmar logica de counters para numeracion.
 
+## Seccion 7 - Productos (model/productos.js / docs)
+- [ ] (MUST) Documentar casos de prueba automáticos para validaciones de rol + `activo`.
+- [ ] (MUST) Consolidar logs JSON si se requiere (por ahora se mantienen prefijos `[products]`).
+- (NICE TO HAVE) Búsqueda por nombre/categoría con paginación server-side.
+- (NICE TO HAVE) Métricas simples (cantidad de creaciones/ediciones/soft deletes por día).
+
 ## Seccion 5 - Seguridad
 - [ ] Sanitizar inputs del FE.
 - [ ] Unificar respuestas JSON (status + message + data).
@@ -48,7 +54,7 @@ Este archivo registra las tareas activas, pendientes y completadas del BACKEND d
 
 ## Seccion 6 - Documentacion
 - [ ] Completar `estado_actual.md` con la descripcion del chat (mantener fecha al dia).
-- [ ] Documentar estructura de Firestore en un archivo aparte.
+- [ ] Documentar estructura de Firestore en un archivo aparte (ahora incluye la colección `productos` con `nombre`, `descripcion`, `precio`, `activo`, `imagenUrl`, `orden`).
 - [ ] Mantener actualizado este archivo de tareas.
 
 ---

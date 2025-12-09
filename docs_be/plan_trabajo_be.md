@@ -7,7 +7,7 @@
 - Chat usa `chatId` (uids ordenados), `leidoPor`, endpoints `/chat`, `/chat/conversaciones`, base `/chat/unread`.
 - Usuarios: `/signup`, `/usuarios`, `/obtenerUsuario`, `/google-login`; doc id = UID, rol default cliente; sin `pass` en respuestas.
 - Pedidos: `/addOrder`, `/updateOrder`, `/orders`; numeración con `counters`.
-- Productos: `/productos` legacy (GET/POST) opera para compatibilidad y se agregaron `/products` (GET) plus `/products/:id` (PUT/DELETE) con roles admin/ordenador y soporte de wrappers POST.
+- Productos: `/productos` legacy (GET/POST) opera para compatibilidad y se agregaron `/products` (GET) plus `/products/:id` (PUT/DELETE) con rol admin exclusivo para mutaciones y soporte de wrappers POST; ahora `imagenUrl` es parte del contrato y se documenta junto a `activo`/`orden`.
 - Docs en `/srv/docs_be` (arquitectura, backlog, procesos, prompts, tareas, agentes, estado actual).
 - Riesgos: índices Firestore pendientes (chat), validaciones mínimas, sin auth/roles estrictos.
 
@@ -21,7 +21,7 @@
 - Rutas usuarios: `/signup`, `/usuarios`, `/obtenerUsuario`, `/google-login` (rol por defecto cliente, doc UID).
 - Chat: `chatId` determinístico, `leidoPor` guardado; `/chat` (POST/GET), `/chat/conversaciones` operativo.
 - Pedidos: `/addOrder`, `/updateOrder`, `/orders` con `counters`.
-- Productos: legacy GET/POST y las nuevas rutas `/products` (GET/PUT/DELETE) con detección de rol (cliente/ordenador/admin) y soft delete.
+- Productos: legacy GET/POST y las nuevas rutas `/products` (GET/PUT/DELETE) con detección de rol (cliente/ordenador/admin), soft delete y soporte de `imagenUrl` en creación/edición documentado en `estado_actual.md`; solo admin puede editar/borrar.
 - Docs internas creadas (agentes, procesos, backlog, estado, prompts, arquitectura chat, tareas).
 
 ## 4) Falta en el BE

@@ -24,6 +24,12 @@
 - Objetivo: usar `markMessagesAsReadForUser` y `isUnreadForUser` para marcar antes de responder; `GET /chat/unread` debe usar `getUnreadCountsByChatForUser` con el mismo criterio.
 - No tocar `/chat/unread` ni `/chat/conversaciones` fuera de compartir lógica.
 
+### TAREA 7 (productos + roles)
+- Scope: `model/productos.js` (y `server.js` solo si ya existe ruta auxiliar de compatibilidad).
+- Objetivo: añadir/ajustar campos `imagenUrl`/`activo` o reglas de rol sin romper los contratos `/products`, `/products/update`, `/products/soft-delete` ni el legacy `/productos`.
+- Restringir mutaciones a `admin`, respetar soft delete (`activo: false`) y mantén logs `[products] ...`.
+- Entrega diff que incluya el nuevo campo o permiso sin afectar chat/usuarios/otros modelos.
+
 ## Consejos
 - Pasar el archivo original y el objetivo exacto.
 - Indicar que no se modifiquen rutas ni esquemas (chatId, participantes, leidoPor).

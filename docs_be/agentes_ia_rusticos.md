@@ -23,9 +23,11 @@ Objetivo: definir blueprint tecnica (componentes, rutas, flujos FEBE, indices Fi
 Objetivo: escribir codigo o prompts para Codex BE, acotados a archivos permitidos.  
 - Para chat: respetar `chatId`, `participantes`, `leidoPor`, indices de Firestore.  
 - Para Firestore: indicar indices requeridos y opcion de emulator.
+- Para productos: respetar roles (`admin` vs `operador`/`cliente`), `activo` como soft delete, y documentar campos como `imagenUrl`/`orden`.
 
 ## QA / Debugger
 Objetivo: revisar bugs, logs, cuotas, indices. Verificar 500 vs 503, mensajes de indice requerido y errores de Firestore.
+- Para productos: probar que `/products` respeta roles/soft delete, `/products/update` y `/products/soft-delete` solo aceptan admin y devuelven `{ res: "ok", producto }` con `imagenUrl` cuando existe.
 
 ## Codex BE
 Objetivo: aplicar cambios pequenos por archivo. No tocar FE. Seguir prompts con scope, restricciones y formato de entrega.

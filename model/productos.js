@@ -43,13 +43,14 @@ const updateProductData = async (uidActual, productoInput) => {
   }
 
   const updateData = {};
-  if (typeof productoInput.nombre === "string") updateData.nombre = productoInput.nombre;
-  if (typeof productoInput.descripcion === "string")
+  if (productoInput.nombre !== undefined) updateData.nombre = productoInput.nombre;
+  if (productoInput.descripcion !== undefined)
     updateData.descripcion = productoInput.descripcion;
   if (productoInput.precio !== undefined) updateData.precio = productoInput.precio;
-  if (typeof productoInput.activo === "boolean") updateData.activo = productoInput.activo;
-  if (typeof productoInput.imagenUrl === "string") updateData.imagenUrl = productoInput.imagenUrl;
-  if (typeof productoInput.orden === "number") updateData.orden = productoInput.orden;
+  if (productoInput.activo !== undefined) updateData.activo = productoInput.activo;
+  if (productoInput.imagenUrl !== undefined)
+    updateData.imagenUrl = productoInput.imagenUrl;
+  if (productoInput.orden !== undefined) updateData.orden = productoInput.orden;
 
   if (Object.keys(updateData).length > 0) {
     await docRef.update(updateData);
@@ -182,17 +183,40 @@ exports.addProduct = async (req, res) => {
       });
     }
 
-    const product = req.body.product;
-    if (!product) {
+    const {
+      nombre,
+      descripcion,
+      precio,
+      activo,
+      imagenUrl,
+      orden,
+      ...otros
+    } = req.body || {};
+
+    if (!nombre || precio === undefined) {
       return res.status(400).json({
         res: "error",
-        msg: "Producto requerido"
+        msg: "Nombre y precio son obligatorios"
       });
     }
 
+    const nuevoProducto = {
+      nombre,
+      descripcion: descripcion || "",
+      precio,
+      activo: activo ?? true,
+      imagenUrl: imagenUrl ?? null,
+      orden: orden ?? null,
+      ...otros
+    };
+
     const productosRef = db.collection("productos");
-    const result = await productosRef.add(product);
-    return res.status(200).json({ res: "ok", id: result.id });
+    const result = await productosRef.add(nuevoProducto);
+    return res.status(200).json({
+      res: "ok",
+      id: result.id,
+      producto: { id: result.id, ...nuevoProducto }
+    });
   } catch (error) {
     console.log("Ocurrió un error", error);
     return res.status(500).json({ res: "fail", err: error });
