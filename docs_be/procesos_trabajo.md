@@ -28,7 +28,7 @@ Este documento define como trabajamos en el backend (Node.js + Express + Firebas
 2) **Arquitecto BE** define blueprint (archivos, rutas, indices, emulator si aplica).
 3) **Implementador BE** prepara prompt para Codex (scope de archivos, que tocar/que no, formato diff/snippet).
 4) **Codex** aplica cambio acotado en BE.
-5) **QA** verifica logs/errores/indices/quotas, 500 vs 503, que GET `/products` respete roles y que los endpoints de productos solo permitan admin.
+5) **QA** verifica logs/errores/indices/quotas, 500 vs 503, que GET `/products` respete roles, que los endpoints de productos solo permitan admin, que `/admin/users` mantenga al menos un admin activo y que `/orders` entregue fecha/email/DNI esperados.
 6) Probar local (preferible primero contra Firestore Emulator).
 7) Actualizar docs/backlog si aplica.
 
@@ -50,6 +50,8 @@ Este documento define como trabajamos en el backend (Node.js + Express + Firebas
   - GET `/chat/conversaciones` lista ultimas conversaciones.
   - GET `/chat/unread` devuelve conteo por `chatId` usando `getUnreadCountsByChatForUser` (mismo criterio `isUnreadForUser` que el marcado).
 - Usuarios: `/signup`, `/usuarios`, `/obtenerUsuario`, `/google-login` devuelven datos consistentes (sin `pass`).
+- Admin users: `/admin/users` (GET y PATCH) expone `rol`/`activo` y evita quitar al último admin activo.
+- Pedidos: `/addOrder` guarda `createdAt`, `emailUsuario`, `dniUsuario` y `/orders` los retorna para el panel admin.
 - Pedidos: `/addOrder`, `/updateOrder`, `/orders` funcionan; mantener compatibilidad de datos.
 - Productos: `/productos` estable.
 
@@ -61,6 +63,8 @@ Este documento define como trabajamos en el backend (Node.js + Express + Firebas
 - Indices: atender mensajes de Firestore, crear indice (chatId+timestamp, participantes+timestamp) si lo pide.
 - Emulator: cuando se pueda, probar primero con Firestore Emulator (envs `USE_FIRESTORE_EMULATOR` o `FIRESTORE_EMULATOR_HOST`).
 - Productos: verificar que admin puede alta/edicion/soft delete y recibe `{ res: "ok", producto }` (incluye `imagenUrl`), y que cliente/operador solo ven activos en GET `/products`.
+- Admin users: validar que `GET /admin/users` muestra `rol`/`activo` y que los PATCH no dejan sin admins activos.
+- Pedidos: chequear que `/orders` devuelve `createdAt`, `emailUsuario` y `dniUsuario` para el panel admin.
 
 ---
 

@@ -12,6 +12,7 @@ const { usuarios, addUser, obtenerUsuario, googleLogin } = require('./model/usua
 const { addOrder, updateOrder, getOrders } = require('./model/pedidos');
 const { addMessage, getMessages, getConversationsRoute, getUnreadRoute } = require('./model/chat');
 const adminUsersRouter = require('./routes/adminUsers');
+const authMiddleware = require('./middlewares/auth');
 
 
 // Initialize Firebase
@@ -33,7 +34,7 @@ app.use(express.json());
 
 app.post('/signup', addUser);
 app.get('/usuarios', usuarios);
-app.get('/obtenerUsuario', obtenerUsuario);
+app.get('/obtenerUsuario', authMiddleware, obtenerUsuario);
 app.post('/google-login', googleLogin);
 
 app.post('/productos', addProduct);

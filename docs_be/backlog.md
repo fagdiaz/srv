@@ -7,6 +7,8 @@
 - Productos: nueva ruta GET /products que filtra por rol, PUT /products/:id y DELETE /products/:id con validaciones de admin/ordenador y wrappers POST para mantener compatibilidad con el FE legado.
 - Docs: módulo productos documentado con campos Firestore (`imagenUrl`, `activo`, `orden`), permisos admin y wrappers POST para update/soft-delete.
 - Productos BE: solo `admin` controla las mutaciones, soft delete usa `activo: false`, operadores/clientes solo ven activos y todos los endpoints incluyen `imagenUrl`.
+- Admin usuarios: `/admin/users` (GET, PATCH rol, PATCH estado) protegido por `requireAdmin`, con helper `isLastActiveAdmin` que evita bajar al último admin activo y expone `rol`/`activo` para el panel.
+- Pedidos: `/addOrder` agrega `createdAt`, `emailUsuario` y `dniUsuario`; `/orders` ahora documenta que devuelve `numeroPedido`, `createdAt`, email y DNI para OrdersAdmin.
 
 ## Pendientes / Futuras
 - Endpoint de busqueda avanzada (si se implementa).

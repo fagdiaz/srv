@@ -55,7 +55,15 @@ Cada documento representa un mensaje individual. Campos tipicos:
 }
 ```
 `chatId` se arma con los dos uids ordenados para que sea deterministico.
-- `leidoPor` siempre se inicializa con el remitente; mensajes legacy sin `leidoPor` se consideran `[]` al contar no leidos.
+- `participantes` permite filtros `array-contains` desde el backend.
+- `leidoPor` siempre se inicializa con el remitente; mensajes legacy sin `leidoPor` se consideran `[]` al contar no leidos y el backend mantiene ese array al marcar como leidos.
+
+### 3.3 Conversaciones
+- No hay una colección dedicada: el backend agrupa por `chatId` y toma el último mensaje para construir la vista de conversaciones (`/chat/conversaciones`).
+- El documento resultante incluye `chatId`, `uidOtro`, `emailOtro`, `ultimoMensaje`, `timestamp` y el conteo de no leidos usando `getUnreadCountsByChatForUser`.
+
+### 3.4 Timestamps y visibilidad
+- Cada mensaje guarda `timestamp` (Timestamp de Firestore) y el backend no transforma la visibilidad; deja que el frontend formatee y ordene las vistas.
 
 ---
 
@@ -154,3 +162,8 @@ Handler: `getUnreadRoute(req, res)`
 ## 9. Notas de desarrollo
 - Se puede usar Firestore Emulator seteando `USE_FIRESTORE_EMULATOR=true` o `FIRESTORE_EMULATOR_HOST=localhost:8080`.
 - No cambiar `chatId`, `participantes` ni `leidoPor` para no romper FE/BE existentes.
+- El backend no implementa polling ni decide qué chats se muestran: el frontend dispara GET `/chat`, `/chat/conversaciones`, `/chat/unread` en intervalos de ~8 s y la API responde con los snapshots actuales.
+
+## 10. Otros módulos backend relevantes
+- `/admin/users` (GET y PATCH) y su helper `isLastActiveAdmin` mantienen al menos un admin activo cuando se modifica `rol`/`activo`.
+- `/addOrder` y `/orders` entregan metadatos (`numeroPedido`, `createdAt`, `emailUsuario`, `dniUsuario`) para que el panel de pedidos admin pueda ordenar y mostrar fecha/email/DNI sin cambiar la vista del chat.

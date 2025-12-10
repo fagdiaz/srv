@@ -1,4 +1,4 @@
-const { db } = require("../util/admin");
+const { admin, db } = require("../util/admin");
 
 exports.usuarios = async (req, res) => {
   const usuariosRef = db.collection("usuarios");
@@ -62,44 +62,59 @@ exports.addUser = async (req, res) => {
 
 exports.obtenerUsuario = async (req, res) => {
   try {
-    // viene como query param: /obtenerUsuario?uid=xxxx
-    const uid = req.query.uid;
-    console.log("ObtenerUsuario:", uid);
+    const { uid, email } = req.user || {};
 
     if (!uid) {
-      return res.status(400).json({
-        res: "fail",
-        message: "Debe enviar uid como query param"
+      return res.status(401).json({
+        res: "error",
+        msg: "UID no disponible"
       });
     }
 
-    const docRef = db.collection("usuarios").doc(uid);
-    const docSnap = await docRef.get();
+    const userRef = db.collection("usuarios").doc(uid);
+    const snap = await userRef.get();
 
-    if (!docSnap.exists) {
-      return res.status(404).json({ res: "not_found" });
+    if (!snap.exists) {
+      const now = admin.firestore.FieldValue.serverTimestamp();
+      await userRef.set({
+        uid,
+        email: email || null,
+        rol: "cliente",
+        activo: true,
+        createdAt: now,
+        updatedAt: now,
+      });
+      const createdSnap = await userRef.get();
+      const createdData = createdSnap.data() || {};
+
+      const usuarioConDefaults = {
+        ...createdData,
+        rol: createdData.rol || "cliente",
+        activo:
+          createdData.activo !== undefined ? createdData.activo : true,
+      };
+
+      return res.json({
+        res: "ok",
+        usuario: { uid, ...usuarioConDefaults },
+      });
     }
 
-    const data = docSnap.data();
-
-    return res.status(200).json({
+    const data = snap.data() || {};
+    const usuarioConstruido = {
+      ...data,
+      rol: data.rol || "cliente",
+      activo: data.activo !== undefined ? data.activo : true,
+    };
+    return res.json({
       res: "ok",
-      usuario: { uid, ...data }
+      usuario: { uid, ...usuarioConstruido },
     });
-  } catch (error) {
-    const details = (error && error.details && String(error.details)) || "";
-    const isQuota =
-      error?.code === 8 ||
-      details.toLowerCase().includes("quota exceeded");
-
-    console.error("Error en obtenerUsuario:", error);
-    if (isQuota) {
-      return res.status(503).json({ error: "quota_exceeded" });
-    }
+  } catch (err) {
+    console.error("Error obteniendo usuario", err);
     return res.status(500).json({
-      res: "fail",
-      message: "Error al obtener usuario",
-      err: String(error)
+      res: "error",
+      msg: "Error obteniendo usuario"
     });
   }
 };

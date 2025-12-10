@@ -1,4 +1,4 @@
-const express = require("express");
+﻿const express = require("express");
 const { admin, db } = require("../util/admin");
 const authMiddleware = require("../middlewares/auth");
 const requireAdmin = require("../middlewares/requireAdmin");
@@ -9,6 +9,22 @@ const ROLES_PERMITIDOS = ["admin", "operador", "cliente"];
 const ESTADO_MAP = {
   activo: true,
   inactivo: false,
+};
+
+const isLastActiveAdmin = async (dbInstance, targetUid) => {
+  const snapshot = await dbInstance
+    .collection(USUARIOS_COL)
+    .where("rol", "==", "admin")
+    .where("activo", "==", true)
+    .get();
+
+  if (snapshot.empty) {
+    return false;
+  }
+  if (snapshot.size === 1 && snapshot.docs[0].id === targetUid) {
+    return true;
+  }
+  return false;
 };
 
 router.get(
@@ -33,10 +49,15 @@ router.get(
       }
 
       const snapshot = await query.get();
-      let usuarios = snapshot.docs.map((doc) => ({
-        uid: doc.id,
-        ...doc.data(),
-      }));
+      let usuarios = snapshot.docs.map((doc) => {
+        const data = doc.data() || {};
+        return {
+          uid: doc.id,
+          rol: data.rol || "cliente",
+          activo: data.activo !== undefined ? data.activo : true,
+          ...data,
+        };
+      });
 
       if (q) {
         const term = String(q).toLowerCase();
@@ -71,9 +92,7 @@ router.patch(
     const normalizedRole = String(requestedRole || "").toLowerCase();
 
     if (!ROLES_PERMITIDOS.includes(normalizedRole)) {
-      return res
-        .status(400)
-        .json({ res: "error", msg: "Rol inválido" });
+      return res.status(400).json({ message: "Rol inválido" });
     }
 
     try {
@@ -81,9 +100,34 @@ router.patch(
       const docSnap = await docRef.get();
 
       if (!docSnap.exists) {
-        return res
-          .status(404)
-          .json({ res: "error", msg: "Usuario no encontrado" });
+        return res.status(404).json({ message: "Usuario no encontrado" });
+      }
+
+      const usuarioExistente = docSnap.data() || {};
+      const rolActual = (usuarioExistente.rol || "cliente").toLowerCase();
+      const activoActual =
+        usuarioExistente.activo !== undefined
+          ? usuarioExistente.activo
+          : true;
+
+      console.log("[PATCH /admin/users/:uid/rol]", {
+        ejecutadoPor: req.user && req.user.uid,
+        targetUid: uid,
+        rolAnterior: rolActual,
+        rolNuevo: normalizedRole,
+      });
+
+      if (
+        rolActual === "admin" &&
+        activoActual === true &&
+        normalizedRole !== "admin"
+      ) {
+        const lastAdmin = await isLastActiveAdmin(db, uid);
+        if (lastAdmin) {
+          return res.status(400).json({
+            message: "No se puede modificar el último administrador activo.",
+          });
+        }
       }
 
       await docRef.update({
@@ -93,11 +137,6 @@ router.patch(
 
       const updatedSnap = await docRef.get();
       const usuarioActualizado = updatedSnap.data() || {};
-
-      // TODO: volver a agregar regla de último admin con logs si hace falta.
-      console.log(
-        `[admin/users] PATCH /admin/users/${uid}/rol admin:${req.user.uid} -> rol:${normalizedRole}`
-      );
 
       return res.status(200).json({
         res: "ok",
@@ -119,16 +158,17 @@ router.patch(
   async (req, res) => {
     const uid = req.params.uid;
     let { activo } = req.body || {};
+
     if (typeof activo === "string") {
       const lower = activo.toLowerCase();
-      if (lower === "true") activo = true;
-      else if (lower === "false") activo = false;
+      if (lower === "true" || lower === "1") activo = true;
+      else if (lower === "false" || lower === "0") activo = false;
+    } else if (typeof activo === "number") {
+      activo = activo === 1;
     }
 
     if (typeof activo !== "boolean") {
-      return res
-        .status(400)
-        .json({ res: "error", msg: "El campo activo debe ser boolean" });
+      return res.status(400).json({ message: "El campo activo debe ser boolean" });
     }
 
     try {
@@ -136,9 +176,34 @@ router.patch(
       const docSnap = await docRef.get();
 
       if (!docSnap.exists) {
-        return res
-          .status(404)
-          .json({ res: "error", msg: "Usuario no encontrado" });
+        return res.status(404).json({ message: "Usuario no encontrado" });
+      }
+
+      const usuarioExistente = docSnap.data() || {};
+      const rolActual = (usuarioExistente.rol || "cliente").toLowerCase();
+      const activoActual =
+        usuarioExistente.activo !== undefined
+          ? usuarioExistente.activo
+          : true;
+
+      console.log("[PATCH /admin/users/:uid/estado]", {
+        ejecutadoPor: req.user && req.user.uid,
+        targetUid: uid,
+        activoAnterior: activoActual,
+        activoNuevo: activo,
+      });
+
+      if (
+        rolActual === "admin" &&
+        activoActual === true &&
+        activo === false
+      ) {
+        const lastAdmin = await isLastActiveAdmin(db, uid);
+        if (lastAdmin) {
+          return res.status(400).json({
+            message: "No se puede desactivar al último administrador activo.",
+          });
+        }
       }
 
       await docRef.update({
@@ -148,10 +213,6 @@ router.patch(
 
       const updatedSnap = await docRef.get();
       const usuarioActualizado = updatedSnap.data() || {};
-
-      console.log(
-        `[admin/users] PATCH /admin/users/${uid}/estado admin:${req.user.uid} -> activo:${activo}`
-      );
 
       return res.status(200).json({
         res: "ok",

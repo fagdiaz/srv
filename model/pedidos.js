@@ -1,4 +1,4 @@
-const { db } = require("../util/admin");
+const { admin, db } = require("../util/admin");
 
 // =====================
 // POST /addOrder
@@ -19,11 +19,15 @@ exports.addOrder = async (req, res) => {
 
   try {
     let emailUsuario = null;
+    let dniUsuario = null;
     if (uid) {
       const userSnap = await usuariosRef.doc(uid).get();
       const userData = userSnap.exists ? userSnap.data() : null;
       if (userData && userData.email) {
         emailUsuario = userData.email;
+        if (userData.dni) {
+          dniUsuario = userData.dni;
+        }
       }
     }
 
@@ -32,6 +36,7 @@ exports.addOrder = async (req, res) => {
       emailUsuario = order.email;
     }
 
+    const now = admin.firestore.FieldValue.serverTimestamp();
     const { id, numeroPedido } = await db.runTransaction(async (t) => {
       const counterSnap = await t.get(counterRef);
       const current =
@@ -42,7 +47,19 @@ exports.addOrder = async (req, res) => {
       const nextNumero = current + 1;
 
       const newOrderRef = pedidosRef.doc();
-      const orderData = { ...order, numeroPedido: nextNumero, emailUsuario };
+      const orderDni =
+        dniUsuario ||
+        (order && order.dni) ||
+        (order && order.dniUsuario) ||
+        (order && order.dniCliente) ||
+        null;
+      const orderData = {
+        ...order,
+        numeroPedido: nextNumero,
+        emailUsuario,
+        dniUsuario: orderDni,
+        createdAt: now,
+      };
 
       t.set(counterRef, { ultimoNumero: nextNumero }, { merge: true });
       t.set(newOrderRef, orderData);
@@ -142,10 +159,33 @@ exports.getOrders = async (req, res) => {
 
     const snapshot = await query.get();
 
-    const pedidos = snapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
+    // Estos campos (`numeroPedido`, `createdAt`, `emailUsuario`, `dniUsuario`)
+    // son los que consume OrdersAdminComponent para ordenar y mostrar metadatos.
+    const pedidos = snapshot.docs.map((doc) => {
+      const data = doc.data() || {};
+      const rawCreatedAt = data.createdAt;
+      let createdAtValue = null;
+      if (rawCreatedAt) {
+        if (rawCreatedAt.toDate) {
+          createdAtValue = rawCreatedAt.toDate();
+        } else if (rawCreatedAt.toMillis) {
+          createdAtValue = new Date(rawCreatedAt.toMillis());
+        } else if (rawCreatedAt instanceof Date) {
+          createdAtValue = rawCreatedAt;
+        } else {
+          createdAtValue = rawCreatedAt;
+        }
+      }
+
+      return {
+        id: doc.id,
+        numeroPedido: data.numeroPedido,
+        createdAt: createdAtValue,
+        emailUsuario: data.emailUsuario || data.email || null,
+        dniUsuario: data.dniUsuario || data.dni || null,
+        ...data,
+      };
+    });
 
     return res.status(200).json(pedidos);
   } catch (error) {
@@ -155,4 +195,3 @@ exports.getOrders = async (req, res) => {
       .json({ res: "error", msg: "Error interno en getOrders" });
   }
 };
-
